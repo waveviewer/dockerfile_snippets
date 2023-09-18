@@ -77,7 +77,7 @@ RUN git clone --branch v0.6.0 https://github.com/google/glog.git --single-branch
 ENV LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/local/lib"
 
 # Install Ceres-solver (required by colmap).
-RUN git clone --branch 2.1.0 https://ceres-solver.googlesource.com/ceres-solver.git --single-branch && \
+RUN git clone --branch 2.1.0 https://github.com/ceres-solver/ceres-solver.git --single-branch && \
     cd ceres-solver && \
     git checkout $(git describe --tags) && \
     mkdir build && \
@@ -100,10 +100,13 @@ RUN git clone --branch 3.8 https://github.com/colmap/colmap.git --single-branch 
     cd ../.. && \
     rm -rf colmap
 
-RUN apt install python3-pip -y
+# RUN add-apt-repository ppa:deadsnakes/ppa && \
+
+RUN apt update && \
+    apt install python3-pip -y
 
 # Create non root user and setup environment.
-RUN useradd -m -d /home/user -g root -G sudo -u 1000 user
+RUN useradd -m -d /home/user -g root -G sudo -u 1005 user
 RUN usermod -aG sudo user
 # Set user password
 RUN echo "user:user" | chpasswd
@@ -111,7 +114,7 @@ RUN echo "user:user" | chpasswd
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 # Switch to new uer and workdir.
-USER 1000
+USER 1005
 WORKDIR /home/user
 
 # Add local user binary folder to PATH variable.
@@ -119,6 +122,7 @@ ENV PATH="${PATH}:/home/user/.local/bin"
 SHELL ["/bin/bash", "-c"]
 
 # Upgrade pip and install packages.
+# RUN python3.10 -m ensurepip --upgrade
 RUN python3.10 -m pip install --upgrade pip setuptools pathtools promise pybind11
 # Install pytorch and submodules
 RUN python3.10 -m pip install \
@@ -157,6 +161,9 @@ RUN git clone --branch main --recursive https://github.com/cvg/pixel-perfect-sfm
     cd ..
 
 RUN python3.10 -m pip install omegaconf
+
+# Default powerline10k theme, no plugins installed
+RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.5/zsh-in-docker.sh)"
 
 # Change working directory
 WORKDIR /workspace
